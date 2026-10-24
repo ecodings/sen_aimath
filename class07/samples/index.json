@@ -1,0 +1,55 @@
+{
+ "samples": [
+  "drive.json",
+  "brewery.json",
+  "limousine.json",
+  "burger.json",
+  "crosswalk.json"
+ ],
+ "try": [
+  {
+   "file": "try/try03.jpg",
+   "name": "도로 위 자동차"
+  },
+  {
+   "file": "try/try10.jpg",
+   "name": "횡단보도 앞"
+  },
+  {
+   "file": "try/try11.jpg",
+   "name": "공항 리무진 버스"
+  },
+  {
+   "file": "try/try14.jpg",
+   "name": "양조장 앞"
+  },
+  {
+   "file": "try/try07.jpg",
+   "name": "가게 앞 주차"
+  },
+  {
+   "file": "try/try13.jpg",
+   "name": "언덕길 골목"
+  },
+  {
+   "file": "try/try12.jpg",
+   "name": "한옥마을 거리"
+  },
+  {
+   "file": "try/try05.jpg",
+   "name": "관광지 거리"
+  },
+  {
+   "file": "try/try04.jpg",
+   "name": "학교 앞 로터리"
+  },
+  {
+   "file": "try/try08.jpg",
+   "name": "전차 운전석 (AI의 실수 찾기)"
+  },
+  {
+   "file": "try/try15.jpg",
+   "name": "밤의 거리 축제"
+  }
+ ]
+}

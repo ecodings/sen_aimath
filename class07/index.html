@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YOLO 실험실</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar"><div class="topbar-in">
+  <div class="brand"><span class="sq"></span>YOLO 실험실</div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-p="home">처음</button>
+    <button class="tab" data-p="try">체험</button>
+    <button class="tab" data-p="s1">① 격자</button>
+    <button class="tab" data-p="s2">② 존재 확률</button>
+    <button class="tab" data-p="s3">③ 상자</button>
+    <button class="tab" data-p="s4">④ 클래스</button>
+    <button class="tab" data-p="s5">⑤ 신뢰도</button>
+    <button class="tab deep" data-p="iou">IoU</button>
+    <button class="tab deep" data-p="nms">NMS</button>
+    <button class="tab" data-p="mine">내 사진</button>
+  </nav>
+  <label class="sample-pick" id="samplePick">예시 사진 <select id="sampleSel"></select></label>
+</div></header>
+
+<main>
+<!-- ================= 처음 ================= -->
+<section class="page" id="p-home">
+  <div class="hero">
+    <div>
+      <div class="k1">수학·정보 융합형 프로그램 · 고등 7차시</div>
+      <h1>한 번만 보고<br>모두 찾아낸다</h1>
+      <div class="k2">객체 탐지 모델 YOLO의 수학</div>
+      <div class="bandbox">You Only Look Once</div>
+    </div>
+    <div class="stage"><canvas id="homeCv" width="1200" height="800"></canvas></div>
+  </div>
+  <div class="road" id="road">
+    <div class="st" data-go="s1"><div class="n">①</div><div class="t">격자 나누기</div><span class="m">좌표평면 구역 나누기</span></div>
+    <div class="st" data-go="s2"><div class="n">②</div><div class="t">객체가 있을 확률</div><span class="m">0과 1 사이의 확률</span></div>
+    <div class="st" data-go="s3"><div class="n">③</div><div class="t">위치와 크기</div><span class="m">좌표와 비율</span></div>
+    <div class="st" data-go="s4"><div class="n">④</div><div class="t">클래스 예측</div><span class="m">가장 큰 확률 고르기</span></div>
+    <div class="st" data-go="s5"><div class="n">⑤</div><div class="t">최종 신뢰도</div><span class="m">확률의 곱</span></div>
+  </div>
+  <div class="deepband" data-go="iou"><span class="lab">심화</span><span>한 물체에 상자가 여러 개 생기면? → 겹친 정도(IoU)를 재고, 가장 확실한 상자만 남긴다(NMS)</span></div>
+  <div class="row" style="margin-top:18px"><button class="btn" data-go="try">체험부터 시작하기</button><button class="btn ghost" data-go="s1">원리부터 시작하기</button></div>
+</section>
+
+<!-- ================= 체험 ================= -->
+<section class="page" id="p-try">
+  <div class="crumb"><span class="sq"></span>체험 · 객체 탐지<span class="tag">TRY IT</span></div>
+  <h1 class="title">체험: AI는 무엇을 찾아낼까?</h1>
+  <p class="sub">사진을 올리거나 웹캠을 켜서 교실의 물건을 찾아보자</p>
+  <div class="grid2 wide">
+    <div>
+      <div class="stage"><canvas id="tryCv" width="960" height="720"></canvas><div class="overlay-msg" id="tryMsg">사진을 올리거나 웹캠을 켜 보세요</div></div>
+      <div class="row" style="margin-top:12px">
+        <label class="btn" style="display:inline-block">사진 올리기<input type="file" id="tryFile" accept="image/*" hidden></label>
+        <button class="btn navy" id="camBtn">웹캠 켜기</button>
+        <select id="tryPick" class="btn ghost" style="padding:8px 10px"></select>
+      </div>
+      <div class="status" id="tryStatus"></div>
+    </div>
+    <div>
+      <div class="solid">
+        <div class="lab">문턱을 넘은 후보 상자 → NMS 뒤 남은 상자</div>
+        <div class="stat"><span class="n" id="nCand">0</span><span class="arr">→</span><span class="n" id="nKeep">0</span><span class="muted" style="color:#C9D4DF" id="tryMs"></span></div>
+      </div>
+      <div class="card">
+        <div class="slider"><span>신뢰도 문턱</span><input type="range" id="thr" min="5" max="90" value="25"><span class="val" id="thrV">25%</span></div>
+        <div class="slider"><span>NMS IoU 기준</span><input type="range" id="nmsThr" min="30" max="90" value="45"><span class="val" id="nmsV">0.45</span></div>
+        <div class="row" style="margin-top:12px">
+          <label class="toggle"><input type="checkbox" id="showCand">NMS 전 후보 상자 보기</label>
+          <label class="toggle"><input type="checkbox" id="showGrid">격자와 존재 확률 보기</label>
+        </div>
+      </div>
+      <div class="card white">
+        <h3 style="color:var(--navy)">찾은 물체 <span class="muted">(누르면 그 상자를 맡은 칸이 보여요)</span></h3>
+        <div class="det-list" id="detList"><div class="muted">아직 찾은 물체가 없어요.</div></div>
+      </div>
+      <div class="note">일상 사물 80종을 배운 공개 모델(YOLOv5n)을 씁니다. 사진과 영상은 기기 밖으로 보내지 않고 브라우저 안에서만 처리해요.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ① 격자 ================= -->
+<section class="page" id="p-s1">
+  <div class="crumb"><span class="sq"></span>원리 · YOLO의 다섯 단계<span class="tag">STEP 1</span></div>
+  <h1 class="title">① 격자 나누기 · 중심 칸 찾기</h1>
+  <p class="sub">사진을 격자로 나누어 좌표평면처럼 보고, 물체의 중심이 들어 있는 칸을 찾는다</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="s1Cv" width="800" height="800" class="clickable"></canvas></div>
+      <div class="row" style="margin-top:12px" id="s1Grid"></div>
+      <div class="row"><label class="toggle"><input type="checkbox" id="s1Box" checked>상자 보이기</label><label class="toggle"><input type="checkbox" id="s1Num" checked>눈금 숫자</label></div>
+    </div>
+    <div>
+      <div class="card white" style="padding:0;overflow:hidden"><table class="t" id="s1Tbl"></table></div>
+      <div class="card" id="s1Calc"></div>
+      <div class="solid"><div class="lab">규칙</div><div class="big">중심 (a, b) → (a의 정수 부분 + 1)열, (b의 정수 부분 + 1)행</div></div>
+      <div class="card yel"><h3>YOLO의 약속</h3>물체의 중심이 들어 있는 칸이 그 물체를 맡는다. 격자를 바꾸면 맡는 칸도 바뀐다.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ② 존재 확률 ================= -->
+<section class="page" id="p-s2">
+  <div class="crumb"><span class="sq"></span>원리 · YOLO의 다섯 단계<span class="tag">STEP 2</span></div>
+  <h1 class="title">② 칸마다 ‘물체가 있을 확률’</h1>
+  <p class="sub">0이면 ‘없다’, 1이면 ‘확실히 있다’</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="s2Cv" width="800" height="800" class="clickable"></canvas></div>
+      <div class="slider" style="margin-top:12px"><span>강조할 기준</span><input type="range" id="s2Thr" min="0" max="100" value="50"><span class="val" id="s2V">0.5</span></div>
+      <div class="note" id="s2Note"></div>
+    </div>
+    <div>
+      <div class="card"><h3>확률로 나타내기</h3>칸마다 0과 1 사이의 수를 계산한다. <b>노란 칸</b>(기준 이상)에 물체가 있을 가능성이 크다. 칸을 눌러 값을 확인해 보자.</div>
+      <div class="card white"><h3>시그모이드 함수</h3>
+        <div class="muted" style="margin-bottom:8px">신경망이 계산한 어떤 수 z든 0과 1 사이의 확률로 바꿔 주는 S자 함수 σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
+        <canvas id="sigCv" width="560" height="260" style="width:100%"></canvas>
+        <div class="slider"><span>신경망의 계산값 z</span><input type="range" id="zIn" min="-60" max="60" value="12"><span class="val" id="zV">1.2</span></div>
+        <div style="margin-top:8px;font-size:15px">σ(z) = <b id="sigV">0.77</b></div>
+      </div>
+      <div class="solid" id="s2Cell"><div class="lab">고른 칸</div><div class="big">칸을 눌러 보세요</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ③ 상자 ================= -->
+<section class="page" id="p-s3">
+  <div class="crumb"><span class="sq"></span>원리 · YOLO의 다섯 단계<span class="tag">STEP 3</span></div>
+  <h1 class="title">③ 위치와 크기: (x, y, w, h)</h1>
+  <p class="sub">칸 안에서의 중심 위치와, 사진 전체에 대한 상자의 크기를 비율로 나타낸다</p>
+  <div class="row" id="s3Pick" style="margin-bottom:14px"></div>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="s3Cv" width="800" height="800"></canvas></div>
+    </div>
+    <div>
+      <div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">맡은 칸 확대</h3><span class="muted" id="s3CellLab"></span></div>
+        <canvas id="s3Zoom" width="560" height="300" style="width:100%;margin-top:8px"></canvas></div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:10px"><h3 style="margin:0">계산해 보기</h3>
+          <label class="toggle"><input type="checkbox" id="s3Quiz">내가 먼저 계산하기</label></div>
+        <div id="s3Calc"></div>
+      </div>
+      <div class="solid"><div class="lab" id="s3ResLab">결과</div><div class="big code" id="s3Res"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ④ 클래스 ================= -->
+<section class="page" id="p-s4">
+  <div class="crumb"><span class="sq"></span>원리 · YOLO의 다섯 단계<span class="tag">STEP 4</span></div>
+  <h1 class="title">④ 클래스 예측: 가장 큰 확률 고르기</h1>
+  <p class="sub">이 칸의 물체는 무엇일까? 칸을 눌러 클래스 확률을 비교해 보자</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="s4Cv" width="800" height="800" class="clickable"></canvas></div>
+      <div class="row" id="s4Pick" style="margin-top:12px"></div>
+    </div>
+    <div>
+      <div class="card"><h3 id="s4Title">칸을 골라 보세요</h3><div class="bars" id="s4Bars"></div><div style="margin-top:14px" id="s4Ans"></div></div>
+      <div class="solid"><div class="lab">최댓값 찾기</div><div class="big">여러 클래스의 확률 중 가장 큰 것을 그 칸의 답으로 고른다</div></div>
+      <div class="note" id="s4Note"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ⑤ 신뢰도 ================= -->
+<section class="page" id="p-s5">
+  <div class="crumb"><span class="sq"></span>원리 · YOLO의 다섯 단계<span class="tag">STEP 5</span></div>
+  <h1 class="title">⑤ 최종 신뢰도 = 존재 확률 × 클래스 확률</h1>
+  <p class="sub">곱한 값이 문턱을 넘는 상자만 남긴다 — 체험에서 움직인 문턱이 바로 이 수!</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="s5Cv" width="800" height="800"></canvas></div>
+    </div>
+    <div>
+      <div class="card white" style="padding:0;overflow:hidden"><table class="t" id="s5Tbl"></table></div>
+      <div class="card"><div class="slider"><span>신뢰도 문턱</span><input type="range" id="s5Thr" min="0" max="100" value="25"><span class="val" id="s5V">0.25</span></div></div>
+      <div class="card yel"><h3>확률의 곱</h3>‘물체가 있을 확률’ × ‘있다면 그 클래스일 확률’ = ‘이 칸에 그 물체가 있을 확률’</div>
+      <div class="note" id="s5Note"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IoU ================= -->
+<section class="page" id="p-iou">
+  <div class="crumb"><span class="sq yel"></span>심화 · 겹친 상자 정리하기<span class="tag yel">MATH</span></div>
+  <h1 class="title">IoU: 두 상자는 얼마나 겹칠까?</h1>
+  <p class="sub">IoU = 겹친 넓이 ÷ 합친 넓이 (교집합 ÷ 합집합) — 상자를 끌어 옮기고, 모서리를 끌어 크기를 바꿔 보자</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="iouCv" width="900" height="630"></canvas></div>
+      <div class="row" style="margin-top:12px">
+        <button class="chip" data-preset="ppt">PPT 예시</button>
+        <button class="chip" data-preset="ws">학습지 예시</button>
+        <button class="chip" data-preset="same">완전히 겹침</button>
+        <button class="chip" data-preset="apart">떨어짐</button>
+        <label class="toggle" style="margin-left:auto"><input type="checkbox" id="iouSnap" checked>눈금에 맞추기</label>
+      </div>
+    </div>
+    <div>
+      <div id="iouRows"></div>
+      <div class="note">합친 넓이 = 두 넓이의 합 − 겹친 넓이 (겹친 부분을 두 번 더했으니 한 번 뺀다)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NMS ================= -->
+<section class="page" id="p-nms">
+  <div class="crumb"><span class="sq yel"></span>심화 · 겹친 상자 정리하기<span class="tag yel">ALGORITHM</span></div>
+  <h1 class="title">NMS: 가장 확실한 상자만 남기기</h1>
+  <p class="sub">신뢰도 순으로 줄 세우고, 가장 높은 상자를 남긴 뒤 많이 겹친 상자를 지운다. 이것을 반복한다</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="nmsCv" width="800" height="800"></canvas></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="nmsStep">한 단계 진행</button>
+        <button class="btn navy" id="nmsAll">끝까지</button>
+        <button class="btn ghost" id="nmsReset">처음부터</button>
+      </div>
+    </div>
+    <div>
+      <div class="card"><div class="slider"><span>IoU 기준</span><input type="range" id="nmsT" min="30" max="90" value="50"><span class="val" id="nmsTV">0.50</span></div></div>
+      <div class="card white" style="padding:0;overflow:hidden"><table class="t yel" id="nmsTbl"></table></div>
+      <div class="log" id="nmsLog" style="margin-top:14px"></div>
+      <div class="solid"><div class="lab">알고리즘</div>① 신뢰도가 높은 순서로 줄 세운다 ② 가장 높은 상자를 남긴다 ③ 남긴 상자와 IoU ≥ 기준인 상자는 지운다 ④ 남은 상자가 있으면 ②로</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 내 사진 ================= -->
+<section class="page" id="p-mine">
+  <div class="crumb"><span class="sq navy"></span>내 사진으로 예시 만들기<span class="tag navy">LABELING</span></div>
+  <h1 class="title">내 사진에 정답 상자 그리기</h1>
+  <p class="sub">직접 찍은 사진에 상자를 그리면 ①~⑤, NMS의 예시 사진으로 쓸 수 있다</p>
+  <div class="grid2">
+    <div>
+      <div class="stage"><canvas id="mCv" width="800" height="600"></canvas><div class="overlay-msg" id="mMsg">사진을 올리고, 물체를 끌어서 상자를 그려 보세요</div></div>
+      <div class="row" style="margin-top:12px">
+        <label class="btn" style="display:inline-block">사진 올리기<input type="file" id="mFile" accept="image/*" hidden></label>
+        <span class="muted">이름표:</span><span class="row" id="mLabels"></span>
+        <input class="text" id="mNewLabel" placeholder="새 이름표" style="width:110px"><button class="btn ghost" id="mAddLabel">추가</button>
+      </div>
+    </div>
+    <div>
+      <div class="card white" style="padding:0;overflow:hidden"><table class="t" id="mTbl"></table></div>
+      <div class="card"><h3>같은 상자, 세 가지 표기</h3><div class="muted" style="margin-bottom:8px">상자를 고르면 COCO(픽셀) · YOLO(비율) · 꼭짓점 표기를 비교할 수 있어요.</div><div id="mFmt" class="code" style="font-size:13.5px;line-height:1.8"></div></div>
+      <div class="card">
+        <div class="row"><input class="text" id="mName" placeholder="예시 이름 (예: 우리 학교 앞 횡단보도)" style="flex:1"><button class="btn" id="mSave">예시로 저장</button></div>
+        <div class="row"><button class="btn ghost" id="mExport">파일로 내보내기</button><label class="btn ghost" style="display:inline-block">파일 불러오기<input type="file" id="mImport" accept=".json,application/json" hidden></label><button class="btn co" id="mDel">저장한 예시 지우기</button></div>
+        <div class="note">저장한 예시는 이 브라우저에만 남아요. 다른 기기에서 쓰려면 파일로 내보낸 뒤 samples 폴더에 넣으세요(README 참고).</div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<footer>그림: 『AI가 쉬워지는 최소한의 수학』 집필용 일러스트 · 탐지 모델: YOLOv5n (Ultralytics, AGPL-3.0) · 실행: onnxruntime-web (MIT) · 글꼴: G마켓 산스</footer>
+
+<script src="vendor/ort/ort.wasm.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
