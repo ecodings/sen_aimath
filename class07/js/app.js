@@ -116,6 +116,7 @@ function go(p) {
   $('samplePick').style.visibility = SHOW_PICK.has(p) ? 'visible' : 'hidden';
   if (location.hash !== '#' + p) history.replaceState(null, '', '#' + p);
   window.scrollTo(0, 0);
+  $('app').classList.toggle('on-home', p === 'home');
   renderPage();
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.p)));
@@ -750,6 +751,19 @@ $('mDel').addEventListener('click', () => {
 
 /* ========================================================= */
 function resetForSample() { s1sel = 0; s2cell = null; s3sel = 0; s4cell = null; nmsState = null; }
+
+// FHD 고정 화면 맞추기
+function fit() {
+  const app = $('app');
+  const mobile = window.innerWidth < 900 && window.innerWidth < window.innerHeight;
+  document.body.classList.toggle('mobile', mobile);
+  if (mobile) { app.style.transform = ''; return; }
+  const k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  const x = (window.innerWidth - 1920 * k) / 2, y = (window.innerHeight - 1080 * k) / 2;
+  app.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+}
+window.addEventListener('resize', fit);
+fit();
 
 loadSamples().then(() => go((location.hash || '#home').slice(1)));
 document.fonts && document.fonts.ready.then(() => renderPage());

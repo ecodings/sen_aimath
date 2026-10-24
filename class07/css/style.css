@@ -172,3 +172,57 @@ footer { max-width: 1280px; margin: 0 auto; padding: 0 24px 32px; color: var(--m
 /* 세로로 긴 사진도 한 화면에 */
 .stage canvas { max-height: 74vh; width: auto; max-width: 100%; margin: 0 auto; }
 .chip .dot { box-shadow: 0 0 0 2px #fff; }
+
+/* =========================================================
+   FHD(1920×1080) 고정 화면 — 창 크기에 맞춰 통째로 확대·축소
+   ========================================================= */
+html, body { height: 100%; overflow: hidden; }
+body { background: #fff; }
+#app { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0;
+  display: flex; flex-direction: column; background: #fff; overflow: hidden; }
+#app .topbar { position: static; flex: none; }
+#app .topbar-in { max-width: none; padding: 14px 56px; }
+#app .tab { font-size: 16px; padding: 8px 16px; }
+#app .brand { font-size: 20px; }
+#app .sample-pick { font-size: 15px; }
+#app .sample-pick select { font-size: 15px; max-width: 300px; }
+#app main { flex: 1; min-height: 0; max-width: none; width: 100%; padding: 20px 56px 0; overflow: hidden; }
+#app .page.on { display: flex; flex-direction: column; height: 100%; }
+#app h1.title { font-size: 34px; margin: 8px 0 2px; }
+#app .sub { font-size: 17px; margin: 0 0 16px; }
+#app .crumb { font-size: 14px; }
+#app .grid2, #app .grid2.wide { flex: 1; min-height: 0; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: stretch; }
+#app .grid2 > div { min-height: 0; }
+#app .grid2 > div:last-child { overflow-y: auto; padding-right: 6px; padding-bottom: 16px; }
+#app .grid2 > div:first-child { display: flex; flex-direction: column; align-items: flex-start; }
+#app .stage { display: inline-block; }
+#app .stage canvas { width: auto; max-width: none; max-height: 740px; }
+#p-s1 .stage canvas { max-height: 680px; }
+#p-s2 .stage canvas { max-height: 700px; }
+#p-try .stage canvas { max-height: 730px; max-width: 1080px; }
+#p-iou .stage canvas { max-height: 640px; }
+#p-nms .stage canvas, #p-s3 .stage canvas { max-height: 720px; }
+#p-s4 .stage canvas { max-height: 700px; }
+#p-mine .stage canvas { max-height: 640px; max-width: 980px; }
+#p-s3 .grid2 { margin-top: 0; }
+#app #s3Pick { margin-bottom: 10px !important; }
+#app .card { padding: 16px 22px; }
+#app .det-list { max-height: 360px; }
+/* 처음 화면 */
+#app .hero { margin-top: 0; gap: 40px; grid-template-columns: minmax(0, 0.9fr) auto; }
+#app .hero h1 { font-size: 56px; }
+#app .hero .stage canvas { max-height: 470px; }
+#app .road { margin-top: 24px; }
+#app footer#credit { position: absolute; left: 56px; right: 56px; bottom: 14px; padding: 0; max-width: none; font-size: 12px; display: none; }
+#app.on-home footer#credit { display: block; }
+
+/* 휴대폰처럼 좁은 화면: 고정 화면을 끄고 원래대로 스크롤 */
+body.mobile { overflow: auto; }
+body.mobile #app { position: static; width: auto; height: auto; transform: none !important; overflow: visible; }
+body.mobile #app main { overflow: visible; padding: 16px; }
+body.mobile #app .page.on { display: block; height: auto; }
+body.mobile #app .grid2, body.mobile #app .grid2.wide { grid-template-columns: 1fr; }
+body.mobile #app .grid2 > div:last-child { overflow: visible; }
+body.mobile #app .stage canvas { width: 100%; max-height: none; }
+body.mobile #app footer#credit { position: static; display: block; padding: 16px; }
+#app #s3Zoom { width: auto !important; max-width: 100%; height: 250px; display: block; margin: 6px auto 0 !important; }
