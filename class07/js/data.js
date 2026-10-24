@@ -14,10 +14,10 @@ export function colorOf(label) {
   return EXTRA_COLORS[h % EXTRA_COLORS.length];
 }
 
-// 책 일러스트(횡단보도 장면) — PPT 7차시 7~16쪽, 학습지와 같은 값
+// 수업용 일러스트(횡단보도 장면) — PPT 7차시 7~16쪽, 학습지와 같은 값
 export const SCENE = {
   id: 'scene',
-  name: '횡단보도 장면 (책 일러스트)',
+  name: '횡단보도 장면 (수업용 일러스트)',
   src: 'img/scene.jpg',
   classes: ['자동차', '자전거', '보행자', '신호등'],
   boxes: [
@@ -26,7 +26,7 @@ export const SCENE = {
     { label: '자전거', x0: 3.15, y0: 4.55, x1: 6.65, y1: 6.65 },
     { label: '신호등', x0: 5.4, y0: 0.15, x1: 6.8, y1: 5.05 },
   ],
-  // ② 칸마다 물체가 있을 확률 (책의 표, 행 = 위에서부터)
+  // ② 칸마다 물체가 있을 확률 (PPT·학습지의 표, 행 = 위에서부터)
   prob: [
     [0, 0, 0, 0, 0, 0.5, 0.6],
     [0, 0, 0, 0, 0, 0.6, 0.7],
