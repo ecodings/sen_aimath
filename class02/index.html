@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SenMall 데이터 탐정단</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="logo">Sen<span>Mall</span> 🕵️</div>
+  <div class="sub">데이터 탐정단 · 누구와 비슷한 스타일일까?</div>
+  <div class="chips">
+    <div class="chip">사건 1 <b id="hdr1">0 / 3</b></div>
+    <div class="chip">사건 2 <b id="hdr2">미해결</b></div>
+  </div>
+</header>
+<nav class="tabs">
+  <button data-t="c1" class="on">🔎 사건 1 · 닮은 고객 찾기</button>
+  <button data-t="c2">🎯 사건 2 · 숨은 고객 찾기</button>
+  <button data-t="lab">🧪 유사도 실험실</button>
+  <button data-t="help">❓ 도움말</button>
+</nav>
+<main>
+
+<!-- 사건 1 -->
+<section id="tab-c1" class="tab on">
+  <div class="mission" style="margin-bottom:14px">
+    <div class="t">사건 파일 1 · 거리</div>
+    <div class="q">“새 고객이 가입했어. 우리 회원 중 누구와 가장 닮았는지 찾아서, 첫 추천 상품을 정해 줘!”</div>
+    <div class="small" style="margin-top:6px;opacity:.9">나이와 월 소비액이 가까운 회원일수록 닮은 고객이에요. 두 점 사이의 <b>거리</b>로 비교해요.</div>
+  </div>
+  <div class="chiprow" id="c1cases"></div>
+  <div class="split">
+    <div class="plotwrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;padding:4px 6px">
+        <div class="small muted">점을 누르면 거리 계산 과정이 보여요</div>
+        <div class="small" style="font-weight:700;color:var(--muted)">월 소비 단위<span class="unitsw" id="unitSw"><button data-u="1" class="on">만 원</button><button data-u="10">천 원</button></span></div>
+      </div>
+      <svg class="plot" id="plot1" viewBox="0 0 640 520"></svg>
+      <div id="unitWarn" class="warnbox hide"></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3 id="c1title">신규 고객</h3>
+        <div id="c1story" class="small"></div>
+        <div id="meBox" class="hide" style="margin-top:8px">
+          <div class="filters"><label>나이<input class="numin" id="meAge" type="number" min="10" max="70" value="17"></label>
+          <label>월 소비 (만 원, 가정)<input class="numin" id="meSpend" type="number" min="0" max="50" value="10"></label></div>
+          <div class="small muted" style="margin-top:6px">실제 내 소비가 아니라 ‘이런 고객이라면?’을 가정해 넣어 보세요.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="step" id="s1"><div class="n">1</div><div class="b"><div class="t">예상하기</div><div class="small" id="s1t">계산하기 전에, 가장 닮았을 것 같은 회원을 그래프에서 하나 눌러 보세요.</div></div></div>
+        <div class="step" id="s2"><div class="n">2</div><div class="b"><div class="t">거리 계산하기</div><div id="s2t" class="small muted">회원 점을 누르면 계산 과정이 나와요.</div>
+          <div class="btnrow"><button class="btn g" id="calcAll" style="padding:8px 12px">📏 모든 회원과 거리 계산</button></div></div></div>
+        <div class="step" id="s3"><div class="n">3</div><div class="b"><div class="t">가장 닮은 회원 Top 3</div><div id="s3t" class="small muted">모든 회원과 거리를 계산하면 나타나요.</div></div></div>
+        <div class="step" id="s4"><div class="n">4</div><div class="b"><div class="t">추천 상품 정하기</div><div id="s4t" class="small muted">Top 3 회원이 많이 산 상품을 보고 추천을 정해요.</div>
+          <div class="prodbtns" id="prodBtns"></div>
+          <div class="btnrow"><button class="btn y" id="sendRec" style="padding:8px 14px" disabled>📨 추천 보내기</button></div>
+          <div id="verdict1"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>📋 회원 명단 <span class="pill" id="c1count"></span></h3>
+    <div style="overflow-x:auto"><table><thead><tr><th>순위</th><th>회원</th><th>나이</th><th>월 소비</th><th>거리 계산</th><th class="num">거리</th><th>가장 많이 산 상품</th></tr></thead><tbody id="c1table"></tbody></table></div>
+  </div>
+</section>
+
+<!-- 사건 2 -->
+<section id="tab-c2" class="tab">
+  <div class="mission" style="margin-bottom:14px">
+    <div class="t">사건 파일 2 · cos 유사도</div>
+    <div class="q">“신상품 ‘북카페 굿즈 세트’를 베타 테스터 지민 님이 아주 좋아했어. 지민 님과 <b style="color:var(--yel)">취향이 같은</b> 고객 5명에게 쿠폰을 보내자!”</div>
+    <div class="small" style="margin-top:6px;opacity:.9">쓰는 돈의 크기는 달라도, 어디에 쓰는지(구성)가 같으면 취향이 같아요. 화살표의 <b>방향</b>을 비교해요.</div>
+  </div>
+  <div class="chiprow"><button class="cchip on" data-st="1">① 두 가지만 보기 (2차원)</button><button class="cchip" data-st="2">② 네 가지 모두 보기 (4차원) · 쿠폰 보내기</button></div>
+  <div id="c2s1">
+    <div class="split">
+      <div class="plotwrap">
+        <div class="toggles"><label><input type="checkbox" id="tArrow" checked> 화살표</label><label><input type="checkbox" id="tRay" checked> 지민 님과 같은 방향 선</label><label><input type="checkbox" id="tUnit"> 길이를 1로 맞추기 (단위원)</label></div>
+        <svg class="plot" id="plot2" viewBox="0 0 640 470"></svg>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <h3>책·문구와 음료만 보면</h3>
+          <div class="small">가로는 <b>책·문구</b>, 세로는 <b>음료</b>에 한 달 동안 쓴 돈(만 원)이에요. 지민 님은 (8, 4).</div>
+          <div class="small" style="margin-top:6px">점을 눌러 지민 님과의 <b>거리</b>와 <b>cos θ</b>를 비교해 보세요. 같은 방향 선 위에 있는 고객은 어떤 사람들일까요?</div>
+        </div>
+        <div class="card"><h3 id="c2d2title">고객을 눌러 보세요</h3><div id="c2d2" class="calc small muted">—</div></div>
+      </div>
+    </div>
+  </div>
+  <div id="c2s2" class="hide">
+    <div class="card" style="margin-bottom:14px">
+      <h3>고객 15명의 한 달 지출 (만 원) <span class="small muted" style="font-weight:600">· 기준: <span style="color:var(--yel-d);font-weight:800">베타 테스터 지민</span> (2, 4, 8, 2)</span></h3>
+      <div class="filters" style="margin-bottom:10px">
+        <button class="btn g" id="showD" style="padding:8px 12px">📏 거리 계산</button>
+        <button class="btn g" id="showC" style="padding:8px 12px">📐 cos θ 계산</button>
+        <span class="sortbar">정렬: <button data-s="name" class="on">이름</button> <button data-s="d">거리 가까운 순</button> <button data-s="c">cos θ 큰 순</button></span>
+      </div>
+      <div style="overflow-x:auto"><table><thead><tr><th>쿠폰</th><th>고객</th><th>간식</th><th>음료</th><th>책·문구</th><th>굿즈</th><th>합계</th><th>지출 구성 (취향)</th><th class="num">거리</th><th class="num">cos θ</th><th id="buyH" class="hide">한 달 뒤</th></tr></thead><tbody id="c2table"></tbody></table></div>
+      <div class="legend" style="margin-top:8px" id="catLegend"></div>
+    </div>
+    <div class="split">
+      <div class="card"><h3 id="c2detT">고객 행을 누르면 계산 과정이 나와요</h3><div id="c2det" class="calc small muted">—</div></div>
+      <div class="card">
+        <h3>🎟 쿠폰 보내기 <span class="pill" id="pickN">0 / 5</span></h3>
+        <div class="small">표에서 5명을 골라 쿠폰을 보내요. 한 달 뒤, 쿠폰을 받은 고객 중 몇 명이 신상품을 샀을까요?</div>
+        <div class="btnrow"><button class="btn y" id="sendCp" disabled>🎟 쿠폰 5장 보내기</button><button class="btn g" id="resetCp">다시 고르기</button></div>
+        <div id="verdict2"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 실험실 -->
+<section id="tab-lab" class="tab">
+  <div class="split">
+    <div class="plotwrap">
+      <div class="toggles"><label><input type="checkbox" id="lDist" checked> 거리</label><label><input type="checkbox" id="lAng" checked> 끼인각 θ</label><label><input type="checkbox" id="lUnit"> 길이를 1로 맞추기</label><label><input type="checkbox" id="lShadow"> 그림자 (cos θ)</label></div>
+      <svg class="plot" id="plot3" viewBox="0 0 560 560"></svg>
+      <div class="small muted" style="padding:4px 8px">파란 점(A)과 주황 점(B)을 끌어서 움직여 보세요. 점은 정수 좌표에 맞춰져요.</div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>측정값</h3>
+        <div class="readout" id="labOut"></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>실험해 보기</h3>
+        <div class="small">
+          <p style="margin:0 0 6px">① B를 A와 <b>같은 방향</b>으로 두 배 길게 늘려 보세요. 거리와 cos θ는 각각 어떻게 될까요?</p>
+          <p style="margin:0 0 6px">② 거리는 같은데 cos θ가 전혀 다른 B를 찾아보세요.</p>
+          <p style="margin:0">③ ‘길이를 1로 맞추기’를 켜고, 두 화살표 끝 사이의 거리와 cos θ의 관계를 살펴보세요.</p>
+        </div>
+      </div>
+      <div class="card"><h3>cos θ를 읽는 두 가지 방법</h3><div class="small" id="labWhy"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 도움말 -->
+<section id="tab-help" class="tab">
+  <div class="grid g2">
+    <div class="card">
+      <h3>데이터 탐정의 두 가지 도구</h3>
+      <table><thead><tr><th></th><th>거리</th><th>cos θ (cos 유사도)</th></tr></thead><tbody>
+        <tr><td><b>무엇을 보나</b></td><td>두 점이 떨어진 정도</td><td>두 화살표 방향의 차이</td></tr>
+        <tr><td><b>계산</b></td><td>√((차)² + (차)² + …)</td><td>길이를 1로 맞춘 뒤 거리 d → cos θ = 1 − d²/2</td></tr>
+        <tr><td><b>비슷할수록</b></td><td>0에 가깝다</td><td>1에 가깝다</td></tr>
+        <tr><td><b>크기(규모)</b></td><td>반영된다</td><td>무시한다 (방향만)</td></tr>
+        <tr><td><b>어울리는 질문</b></td><td>얼마나 비슷한 <b>양</b>인가?</td><td>얼마나 비슷한 <b>취향·구성</b>인가?</td></tr>
+      </tbody></table>
+      <div class="note" style="margin-top:10px">차원이 늘어나도 계산 방법은 같아요. 2차원은 그림으로 볼 수 있고, 4차원·2048차원은 그림 대신 계산으로 비교해요.</div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <h3>왜 cos θ = 1 − d²/2 일까?</h3>
+        <div class="small">길이가 1인 두 화살표의 끝을 잇는 선분의 길이를 d라 하면, 코사인법칙에서 d² = 1² + 1² − 2·1·1·cos θ 이므로 cos θ = 1 − d²/2 예요. ‘방향만 남긴 뒤의 거리’로 cos θ를 구하는 셈이에요.</div>
+      </div>
+      <div class="card">
+        <h3>교사용</h3>
+        <div class="small">
+          <p>· 모든 고객 데이터는 수업용 가상 데이터예요.</p>
+          <p>· 사건 1 정답: A → 캐릭터 굿즈(도윤·하준), B → 등산 스틱(예준·수아), C → 무선 이어폰(하은·서윤). 월 소비 단위를 ‘천 원’으로 바꾸면 A의 3위가 63세 윤서로 바뀌어요 → 단위(스케일) 문제는 3차시 정규화에서 다뤄요.</p>
+          <p>· 사건 2 규칙: 지민 님과 cos θ ≥ 0.97인 고객(가온·나래·마루·자윤·하람)이 한 달 뒤 신상품을 샀어요. 거리 가까운 5명에게 보내면 2명, cos θ 큰 5명에게 보내면 5명이 사요.</p>
+          <p>· 학생 기록은 이 기기에만 저장돼요. <button class="btn g" id="resetAll" style="padding:5px 10px;font-size:13px">처음부터 다시</button></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
