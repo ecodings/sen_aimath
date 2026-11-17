@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SenMart 대회 진행 (교사용)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-size:16px}
+.layout{grid-template-columns:minmax(0,1fr) 440px}
+@media(max-width:1100px){.layout{grid-template-columns:minmax(0,1fr)}}
+.pinchip{background:var(--yel);color:#3a2a00;border-radius:12px;padding:4px 14px;font-weight:800;font-size:15px}
+.pinchip b{font-size:26px;letter-spacing:3px;margin-left:6px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.steps div{flex:1;min-width:92px;text-align:center;border-radius:10px;padding:8px 6px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--muted)}
+.steps div.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.steps div.done{color:var(--blue-d);background:var(--ice)}
+.stage{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:14px}
+.stage .ttl{font-size:30px;font-weight:800;color:var(--navy);letter-spacing:-.5px}
+.stage .ins{font-size:19px;margin-top:6px;line-height:1.6}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.ctrl .btn{font-size:17px}
+.timerbig{font-size:44px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.timerbig.warn{color:var(--red)}
+.tbtn{font:inherit;font-weight:700;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer}
+.joinbox{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.joinbox .url{font-size:20px;font-weight:700;color:var(--blue-d);word-break:break-all}
+#qr{background:#fff;padding:8px;border:1px solid var(--line);border-radius:12px;width:176px;height:176px}
+.keybox{background:var(--yel-t);border:2px dashed var(--yel);border-radius:14px;padding:12px 16px;margin-top:14px;font-size:18px}
+.keybox b{font-size:34px;letter-spacing:6px;color:var(--yel-d);margin-left:8px}
+.topcards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+@media(max-width:900px){.topcards{grid-template-columns:1fr}}
+.topcards .c{background:var(--ice);border-radius:12px;padding:12px}
+.topcards .c .n{font-weight:800;color:var(--navy)}
+.topcards .c .d{font-size:14px;margin-top:4px}
+.podium{display:flex;gap:12px;align-items:flex-end;justify-content:center;margin-top:18px}
+.podium .p{flex:1;max-width:220px;text-align:center}
+.podium .blk{border-radius:12px 12px 0 0;background:var(--navy);color:var(--yel);font-size:34px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.podium .nm{font-weight:800;color:var(--navy);margin-bottom:6px;font-size:18px}
+.board .brow .nm{font-size:18px}
+.board .brow .sc{font-size:18px}
+.board h3{font-size:22px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools .btn{font-size:14px;padding:9px 12px}
+.modalbox{background:#fff;border-radius:16px;padding:20px;width:min(980px,95vw);max-height:90vh;overflow:auto;text-align:left}
+.modalbox h4{margin:14px 0 6px;color:var(--navy)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Sen<span>Mart</span> 🏪</div>
+  <div class="sub">천하제일 알바대회 · 매출을 끌올하라! <span style="opacity:.7">(교사 진행 화면)</span></div>
+  <div class="chips">
+    <div class="pinchip hide" id="cPin">참여 코드<b id="cPinV"></b></div>
+    <div class="chip hide" id="cNet"><span class="netdot" id="netDot"></span><span id="netTxt">연결됨</span></div>
+  </div>
+</header>
+
+<div class="joinwrap" id="setupView">
+  <div class="joincard">
+    <div class="kick">교사용</div>
+    <h1>대회 <span>진행</span> 화면</h1>
+    <div class="lead">교사 코드를 입력하고 새 게임을 만드세요. 반마다 새 게임을 만들면 돼요.</div>
+    <div class="field"><b>교사 코드</b><input id="inKey" type="password" autocomplete="off" placeholder="교사 코드"></div>
+    <button class="btn y" id="newBtn" style="width:100%;font-size:18px">🎮 새 게임 만들기</button>
+    <div class="field" style="margin-top:16px"><b>이어하기</b><input id="inPin" inputmode="numeric" maxlength="4" placeholder="참여 코드 4자리"><button class="btn g" id="resumeBtn" style="padding:8px 12px">열기</button></div>
+    <div class="msg" id="setupMsg"></div>
+    <div><button class="linkbtn" id="offBtn">인터넷 순위판 없이 진행하기 (오프라인 모드)</button></div>
+  </div>
+</div>
+
+<div class="layout hide" id="mainView">
+  <main>
+    <div class="steps" id="steps"></div>
+    <div class="stage" id="stage"></div>
+    <div class="ctrl">
+      <button class="btn g" id="prevBtn">◀ 이전 단계</button>
+      <button class="btn y" id="nextBtn">다음 ▶</button>
+      <span style="flex:1"></span>
+      <span id="timerCtl"></span>
+    </div>
+    <div class="tools">
+      <button class="btn g" id="ansBtn">📘 모범답안</button>
+      <button class="btn g" id="manBtn">🛠 지점 관리 · 결과 코드 입력</button>
+      <button class="btn g" id="csvBtn">⬇ 결과 저장 (CSV)</button>
+      <button class="btn g" id="quitBtn">↩ 처음 화면</button>
+    </div>
+  </main>
+  <aside class="board" id="board">
+    <h3>🏆 지점 순위</h3>
+    <div class="bsub"></div>
+    <div class="blist"></div>
+  </aside>
+</div>
+
+<div class="overlay" id="ansOv"><div class="modalbox ans">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-weight:800;font-size:20px;color:var(--navy)">📘 교사용 모범답안</div>
+    <div class="sortbar" id="ansPick"></div><button class="btn g" id="ansClose">닫기</button></div>
+  <div id="ansBody"></div>
+</div></div>
+<div class="overlay" id="manOv"><div class="modalbox">
+  <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800;font-size:20px;color:var(--navy)">🛠 지점 관리 · 결과 코드 입력</div><button class="btn g" id="manClose">닫기</button></div>
+  <h4>결과 코드로 입력하기</h4>
+  <div class="small muted" style="margin-bottom:6px">학생 화면의 결과 코드(예: <span class="code">2-FKMOIPN</span>)를 입력하면 그 지점의 진열이 등록돼요. 이름이 없는 지점은 새로 만들어져요.</div>
+  <div class="filters">
+    <label>지점 이름<input id="mName" maxlength="12" style="font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:8px"></label>
+    <label>결과 코드<input id="mCode" maxlength="12" style="font:inherit;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-family:Consolas,monospace" placeholder="2-FKMOIPN"></label>
+    <button class="btn" id="mAdd">등록</button><span class="msg" id="mMsg"></span>
+  </div>
+  <h4>지점 목록</h4>
+  <div style="overflow-x:auto"><table><thead><tr><th>지점</th><th>1라운드</th><th>2라운드</th><th>3라운드</th><th>관리</th></tr></thead><tbody id="manBody"></tbody></table></div>
+</div></div>
+
+<script src="config.js"></script>
+<script src="customers.js"></script>
+<script src="core.js"></script>
+<script src="answer.js"></script>
+<script src="common.js"></script>
+<script src="host.js"></script>
+</body>
+</html>

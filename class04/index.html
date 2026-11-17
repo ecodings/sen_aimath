@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SenMart 천하제일 알바대회</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="logo">Sen<span>Mart</span> 🏪</div>
+  <div class="sub">천하제일 알바대회 · 매출을 끌올하라!</div>
+  <div class="chips">
+    <div class="chip hide" id="cStore"></div>
+    <div class="chip hide" id="cPhase"></div>
+    <div class="chip hide" id="cTimer">⏱ <b id="cTimerV"></b></div>
+    <div class="chip hide" id="cNet"><span class="netdot" id="netDot"></span><span id="netTxt">연결됨</span></div>
+  </div>
+</header>
+
+<!-- 입장 -->
+<div class="joinwrap" id="joinView">
+  <div class="joincard">
+    <div class="kick">🏆 천하제일 알바대회</div>
+    <h1>매출을 <span>끌올</span>하라!</h1>
+    <div class="lead">우리 모둠의 SenMart 지점 이름을 정하고 입장하세요.</div>
+    <div id="onlineFields">
+      <div class="field"><b>참여 코드</b><input id="inPin" inputmode="numeric" maxlength="4" placeholder="선생님 화면의 숫자 4자리" autocomplete="off"></div>
+    </div>
+    <div class="field"><b>SenMart</b><input id="inName" maxlength="12" placeholder="지점 이름" autocomplete="off"><b>점</b></div>
+    <div class="msg" id="joinMsg"></div>
+    <button class="btn y" id="joinBtn" style="width:100%;font-size:18px;margin-top:6px">입장하기</button>
+    <div><button class="linkbtn" id="offBtn">인터넷 순위판 없이 하기 (오프라인 모드)</button></div>
+  </div>
+</div>
+
+<!-- 게임 -->
+<div class="layout hide" id="gameView">
+  <main>
+    <div class="tabs">
+      <button data-t="store" class="on">🏪 매장 진열</button>
+      <button data-t="data" id="tabData">🧾 영수증 분석</button>
+      <button data-t="report" id="tabReport">📊 결과 보고서</button>
+      <button data-t="help">❓ 규칙</button>
+    </div>
+
+    <section id="tab-store" class="tab on"><div id="storeBox"></div></section>
+
+    <section id="tab-data" class="tab">
+      <div class="card" id="dataLock"><h3>🔒 아직 열리지 않았어요</h3><div class="muted">영수증 분석은 <b>1라운드</b>부터 쓸 수 있어요. 연습 게임은 감으로!</div></div>
+      <div id="dataBox">
+        <div class="card" style="margin-bottom:14px">
+          <h3><span id="dataTitle">🧾 지난 2주 영수증</span> <span class="pill" id="nAll"></span></h3>
+          <div class="filters"><label>조건 상품 (모두 산 영수증만)<div class="tags" id="condTags"></div></label></div>
+          <div class="filters" style="margin-top:10px">
+            <label>손님 집단<select id="fGroup"></select></label>
+            <label>시간대<select id="fSlot"></select></label>
+            <button class="btn g" id="clearBtn">조건 지우기</button>
+            <button class="btn g" id="xlsxBtn">⬇ 엑셀로 내보내기</button>
+          </div>
+        </div>
+        <div class="grid g2">
+          <div class="card">
+            <h3 id="resTitle">함께 산 상품</h3>
+            <div class="small muted" id="resDesc" style="margin-bottom:8px"></div>
+            <div class="sortbar" style="margin-bottom:8px">정렬: <button data-s="conf" class="on">함께 산 비율 순</button> <button data-s="lift">몇 배 순</button> <button data-s="n">영수증 수 순</button></div>
+            <div style="overflow-x:auto"><table><thead id="resHead"></thead><tbody id="resBody"></tbody></table></div>
+          </div>
+          <div class="card">
+            <h3>영수증 미리보기 <span class="pill" id="nShow"></span></h3>
+            <div style="max-height:620px;overflow:auto"><table><thead><tr><th>#</th><th>집단</th><th>시간대</th><th>산 물건</th><th class="num">금액</th></tr></thead><tbody id="recBody"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-report" class="tab">
+      <div class="card" id="emptyReport"><h3>아직 결과가 없어요</h3><div class="muted">라운드가 끝나고 선생님이 결과를 발표하면 여기에서 우리 지점의 결과를 볼 수 있어요.</div></div>
+      <div id="reportBox" class="hide">
+        <div class="sortbar" id="repPick" style="margin-bottom:12px"></div>
+        <div class="grid g4" style="margin-bottom:14px">
+          <div class="kpi"><div class="l">구분</div><div class="v" id="kWeek"></div></div>
+          <div class="kpi"><div class="l">진열 효과로 더 판 매출</div><div class="v" id="kSales"></div></div>
+          <div class="kpi good"><div class="l">순이익 증가 (마진 30%)</div><div class="v" id="kProfit"></div></div>
+          <div class="kpi lv"><div class="l" id="kRankL">현재 순위</div><div class="v" id="kRank"></div></div>
+        </div>
+        <div class="grid g2">
+          <div class="card">
+            <h3 id="itemTitle">항목별 가상 매출</h3>
+            <div class="legend"><span><i style="background:#9FC4E0"></i>평소 매출</span><span><i style="background:var(--yel)"></i>진열 효과로 더 판 매출</span></div>
+            <div class="bars" id="bars"></div>
+            <div class="small muted" id="totalLine" style="margin-top:8px"></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:14px">
+              <h3>단짝별 효과</h3>
+              <div style="overflow-x:auto"><table><thead id="effHead"></thead><tbody id="effBody"></tbody></table></div>
+              <div class="small muted" style="margin-top:6px" id="effNote"></div>
+            </div>
+            <div class="card">
+              <h3>우리 지점 기록</h3>
+              <div style="overflow-x:auto"><table><thead><tr><th>라운드</th><th>단짝 진열</th><th>계산대 옆</th><th class="num">순이익 증가</th></tr></thead><tbody id="histBody"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-help" class="tab">
+      <div class="grid g2">
+        <div class="card">
+          <h3>대회 규칙</h3>
+          <ol style="margin:0;padding-left:20px">
+            <li>SenMart 손님은 3차시의 편의점 손님 200명이에요. 손님마다 집단과 자주 오는 시간대가 있고, <b>확률에 따라</b> 물건을 사요.</li>
+            <li><b>연습 게임</b>: 영수증 없이 <b>감으로</b> 단짝 1쌍! 진열 효과가 어떻게 생기는지 맛보기예요. 순위에 들어가지 않아요.</li>
+            <li><b>1라운드</b>: 영수증을 분석해 <b>단짝 진열대 3쌍</b>을 정해요.</li>
+            <li><b>2라운드</b>: 지지도 · 신뢰도 · 향상도를 배운 뒤 다시! <b>계산대 옆 1칸</b>이 추가돼요.</li>
+            <li><b>3라운드</b>: 특별 기간 <b>열흘</b> 영업! 손님 구성이 바뀌니 새 영수증을 다시 분석해요.</li>
+            <li>진열은 선생님이 마감하기 전까지 몇 번이든 고쳐 제출할 수 있어요. <b>마지막으로 제출한 진열</b>로 영업해요.</li>
+            <li>점수 = 진열 효과로 늘어난 매출 × 마진 30% = <b>순이익 증가</b>. 세 라운드를 <b>더한 점수</b>로 순위를 정해요.</li>
+            <li>같은 라운드에 같은 진열을 내면 결과도 같아요. 데이터로 근거를 찾는 지점이 이겨요!</li>
+          </ol>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:14px">
+            <h3>💡 진열 효과는 어떻게 생길까?</h3>
+            <div class="small">
+              <p style="margin:0 0 6px">A와 B를 나란히 두면, <b>A를 사러 온 손님 중 B를 안 산 손님</b>이 B를 하나 더 집을 수 있어요.</p>
+              <p style="margin:0">그 가능성은 데이터 속 <b>‘A를 산 사람이 B도 사는 비율’이 ‘원래 B를 사는 비율’보다 얼마나 큰지</b>에 따라 달라져요.</p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>세 가지 지표 <span class="lock" id="metricLock"></span></h3>
+            <div id="metricBox">
+              <table><tbody>
+                <tr><td><b>지지도</b></td><td>A와 B를 함께 산 영수증 수 ÷ 전체 영수증 수 = P(A∩B)</td></tr>
+                <tr><td><b>신뢰도</b></td><td>A를 산 영수증 중 B도 산 비율 = P(B | A)</td></tr>
+                <tr><td><b>향상도</b></td><td>신뢰도 ÷ 전체 중 B 비율 = 원래보다 몇 배?</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="board" id="board">
+    <h3>🏆 지점 순위</h3>
+    <div class="bsub"></div>
+    <div class="blist"></div>
+  </aside>
+</div>
+
+<div class="overlay" id="overlay"><div class="simbox">
+  <div style="font-weight:800;font-size:19px;color:var(--navy)" id="simTitle">영업 중…</div>
+  <div class="street" id="street"><div class="door">🏪</div></div>
+  <div class="prog"><div id="progBar"></div></div>
+  <div class="small muted" style="margin-top:8px" id="simCount">손님 0명</div>
+  <button class="btn g" style="margin-top:12px" id="skipBtn">건너뛰기</button>
+</div></div>
+<div class="overlay" id="keyOv"><div class="simbox" style="text-align:left">
+  <div style="font-weight:800;font-size:19px;color:var(--navy)" id="keyTitle">다음 단계 열기</div>
+  <div class="small muted" style="margin:6px 0 12px">선생님 화면에 나온 <b>열쇠 숫자 3자리</b>를 입력하세요.</div>
+  <input id="keyIn" inputmode="numeric" maxlength="3" autocomplete="off" style="font:inherit;font-size:22px;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px">
+  <div class="msg" id="keyMsg"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button class="btn g" id="keyCancel">취소</button><button class="btn" id="keyOk">열기</button></div>
+</div></div>
+
+<script src="config.js"></script>
+<script src="customers.js"></script>
+<script src="core.js"></script>
+<script src="common.js"></script>
+<script src="student.js"></script>
+</body>
+</html>
